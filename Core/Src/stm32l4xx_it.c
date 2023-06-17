@@ -22,6 +22,8 @@
 #include "stm32l4xx_it.h"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "myTasks.h"
+#include "stm32l4xx_ll_usart.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -41,7 +43,7 @@
 
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN PV */
-
+extern TaskHandle_t xUartTaskHandle;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -186,7 +188,14 @@ void USART1_IRQHandler(void)
   /* USER CODE END USART1_IRQn 0 */
   HAL_UART_IRQHandler(&huart1);
   /* USER CODE BEGIN USART1_IRQn 1 */
-
+  if(LL_USART_IsEnabledIT_IDLE(USART1) && LL_USART_IsActiveFlag_IDLE(USART1))
+  {
+	  LL_USART_ClearFlag_IDLE(USART1);        /* Clear IDLE line flag */
+	  // Give a task notification to the UART2 Task
+	  BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+	  xTaskNotifyFromISR(xUartTaskHandle, UART1_IDLE_EVENT, eSetBits, &xHigherPriorityTaskWoken);
+	  portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+  }
   /* USER CODE END USART1_IRQn 1 */
 }
 

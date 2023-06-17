@@ -79,21 +79,6 @@ void HAL_MspInit(void)
   /* USER CODE END MspInit 1 */
 }
 
-/**
-* @brief UART MSP Initialization
-* This function configures the hardware resources used in this example
-* @param huart: UART handle pointer
-* @retval None
-*/
-
-
-/**
-* @brief UART MSP De-Initialization
-* This function freeze the hardware resources used in this example
-* @param huart: UART handle pointer
-* @retval None
-*/
-
 
 /* USER CODE BEGIN 1 */
 
