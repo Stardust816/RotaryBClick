@@ -114,6 +114,7 @@ const osSemaphoreAttr_t uartSema_attributes = {
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
+void MX_FREERTOS_Init(void);
 static void MX_GPIO_Init(void);
 static void MX_DMA_Init(void);
 // static void MX_USART2_UART_Init(void);
@@ -173,11 +174,13 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
+  StartTcpServer(NULL);
 
   /* USER CODE END Init */
 
   /* Configure the system clock */
   SystemClock_Config();
+  MX_FREERTOS_Init();
 
   /* USER CODE BEGIN SysInit */
 

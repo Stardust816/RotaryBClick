@@ -37,7 +37,7 @@ void StartDefaultTask(void *argument) {
 
 	// Create tasks
 	//xTaskCreate(uart2Task, "Uart1Task", 128, NULL, osPriorityLow, NULL);
-	xTaskCreate(UartHandlerTask, xUartHandlerTaskName, 128, NULL, osPriorityNormal1, &xUartTaskHandle);
+	xTaskCreate(UartHandlerTask, xUartHandlerTaskName, 128, NULL, osPriorityHigh, &xUartTaskHandle);
 
 	// Activate UART interrupts and reception
 	LL_USART_EnableIT_IDLE(USART1); // Enable idle line detection (interrupt) for uart1
