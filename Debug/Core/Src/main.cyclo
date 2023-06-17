@@ -1,0 +1,8 @@
+main.c:107:6:setleds	3
+main.c:140:5:main	1
+main.c:224:6:SystemClock_Config	4
+main.c:285:13:MX_USART2_UART_Init	2
+main.c:320:13:MX_GPIO_Init	1
+main.c:368:6:StartLedTask	3
+main.c:410:6:StartEncoderTask	10
+main.c:481:6:Error_Handler	1
