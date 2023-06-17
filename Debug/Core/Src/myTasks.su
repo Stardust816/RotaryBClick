@@ -1,0 +1,6 @@
+../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_ll_usart.h:3640:22:LL_USART_EnableIT_IDLE	40	static,ignoring_inline_asm
+../Core/Src/myTasks.c:34:6:StartDefaultTask	24	static
+../Core/Src/myTasks.c:83:6:UartHandlerTask	32	static
+../Core/Src/myTasks.c:151:6:HAL_UART_RxCpltCallback	32	static,ignoring_inline_asm
+../Core/Src/myTasks.c:163:6:SendATCommand	24	static
+../Core/Src/myTasks.c:174:6:StartTcpServer	8	static

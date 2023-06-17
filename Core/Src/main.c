@@ -25,6 +25,8 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <string.h>
+#include "myTasks.h"
+#include "usart.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -50,7 +52,9 @@ typedef struct  {
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
-UART_HandleTypeDef huart2;
+//UART_HandleTypeDef huart1;
+//UART_HandleTypeDef huart2;
+//DMA_HandleTypeDef hdma_usart1_rx;
 
 /* Definitions for LedTask */
 osThreadId_t LedTaskHandle;
@@ -76,6 +80,13 @@ const osThreadAttr_t EncoderTask_attributes = {
   .stack_size = sizeof(EncoderTaskBuffer),
   .priority = (osPriority_t) osPriorityLow,
 };
+/* Definitions for defaultTask */
+/*osThreadId_t defaultTaskHandle;
+const osThreadAttr_t defaultTask_attributes = {
+  .name = "defaultTask",
+  .stack_size = 128 * 4,
+  .priority = (osPriority_t) osPriorityNormal,
+};*/
 /* Definitions for RotaryEncoderQueue */
 osMessageQueueId_t RotaryEncoderQueueHandle;
 uint8_t RotaryEncoderQueueBuffer[ 16 * sizeof( InputEvent ) ];
@@ -94,9 +105,12 @@ const osMessageQueueAttr_t RotaryEncoderQueue_attributes = {
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
-static void MX_USART2_UART_Init(void);
+static void MX_DMA_Init(void);
+//static void MX_USART2_UART_Init(void);
+//static void MX_USART1_UART_Init(void);
 void StartLedTask(void *argument);
 void StartEncoderTask(void *argument);
+void StartDefaultTask(void *argument);
 
 /* USER CODE BEGIN PFP */
 
@@ -161,7 +175,9 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_DMA_Init();
   MX_USART2_UART_Init();
+  MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
 
   /* USER CODE END 2 */
@@ -195,6 +211,9 @@ int main(void)
 
   /* creation of EncoderTask */
   EncoderTaskHandle = osThreadNew(StartEncoderTask, NULL, &EncoderTask_attributes);
+
+  /* creation of defaultTask */
+  //defaultTaskHandle = osThreadNew(StartDefaultTask, NULL, &defaultTask_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
 	/* add threads, ... */
@@ -278,12 +297,47 @@ void SystemClock_Config(void)
 }
 
 /**
+  * @brief USART1 Initialization Function
+  * @param None
+  * @retval None
+  */
+//static void MX_USART1_UART_Init(void)
+//{
+
+  /* USER CODE BEGIN USART1_Init 0 */
+
+  /* USER CODE END USART1_Init 0 */
+
+  /* USER CODE BEGIN USART1_Init 1 */
+
+  /* USER CODE END USART1_Init 1 */
+  //huart1.Instance = USART1;
+  //huart1.Init.BaudRate = 115200;
+  //huart1.Init.WordLength = UART_WORDLENGTH_8B;
+  //huart1.Init.StopBits = UART_STOPBITS_1;
+  //huart1.Init.Parity = UART_PARITY_NONE;
+  //huart1.Init.Mode = UART_MODE_TX_RX;
+  //huart1.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  //huart1.Init.OverSampling = UART_OVERSAMPLING_16;
+  //huart1.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
+  //huart1.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
+  //if (HAL_UART_Init(&huart1) != HAL_OK)
+  //{
+    //Error_Handler();
+  //}
+  /* USER CODE BEGIN USART1_Init 2 */
+
+  /* USER CODE END USART1_Init 2 */
+
+//}
+
+/**
   * @brief USART2 Initialization Function
   * @param None
   * @retval None
   */
-static void MX_USART2_UART_Init(void)
-{
+//static void MX_USART2_UART_Init(void)
+//{
 
   /* USER CODE BEGIN USART2_Init 0 */
 
@@ -292,23 +346,39 @@ static void MX_USART2_UART_Init(void)
   /* USER CODE BEGIN USART2_Init 1 */
 
   /* USER CODE END USART2_Init 1 */
-  huart2.Instance = USART2;
-  huart2.Init.BaudRate = 115200;
-  huart2.Init.WordLength = UART_WORDLENGTH_8B;
-  huart2.Init.StopBits = UART_STOPBITS_1;
-  huart2.Init.Parity = UART_PARITY_NONE;
-  huart2.Init.Mode = UART_MODE_TX_RX;
-  huart2.Init.HwFlowCtl = UART_HWCONTROL_NONE;
-  huart2.Init.OverSampling = UART_OVERSAMPLING_16;
-  huart2.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
-  huart2.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
-  if (HAL_UART_Init(&huart2) != HAL_OK)
-  {
-    Error_Handler();
-  }
+  //huart2.Instance = USART2;
+  //huart2.Init.BaudRate = 115200;
+  //huart2.Init.WordLength = UART_WORDLENGTH_8B;
+  //huart2.Init.StopBits = UART_STOPBITS_1;
+  //huart2.Init.Parity = UART_PARITY_NONE;
+  //huart2.Init.Mode = UART_MODE_TX_RX;
+  //huart2.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  //huart2.Init.OverSampling = UART_OVERSAMPLING_16;
+  //huart2.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
+  //huart2.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
+  //if (HAL_UART_Init(&huart2) != HAL_OK)
+  //{
+    //Error_Handler();
+  //}
   /* USER CODE BEGIN USART2_Init 2 */
 
   /* USER CODE END USART2_Init 2 */
+
+//}
+
+/**
+  * Enable DMA controller clock
+  */
+static void MX_DMA_Init(void)
+{
+
+  /* DMA controller clock enable */
+  __HAL_RCC_DMA1_CLK_ENABLE();
+
+  /* DMA interrupt init */
+  /* DMA1_Channel5_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA1_Channel5_IRQn, 5, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Channel5_IRQn);
 
 }
 
@@ -472,6 +542,45 @@ void StartEncoderTask(void *argument)
 		osDelay(1);
 	}
   /* USER CODE END StartEncoderTask */
+}
+
+/* USER CODE BEGIN Header_StartDefaultTask */
+/**
+* @brief Function implementing the defaultTask thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_StartDefaultTask */
+//__weak void StartDefaultTask(void *argument)
+//{
+  /* USER CODE BEGIN StartDefaultTask */
+  /* Infinite loop */
+  //for(;;)
+  //{
+    //osDelay(1);
+  //}
+  /* USER CODE END StartDefaultTask */
+//}
+
+/**
+  * @brief  Period elapsed callback in non blocking mode
+  * @note   This function is called  when TIM6 interrupt took place, inside
+  * HAL_TIM_IRQHandler(). It makes a direct call to HAL_IncTick() to increment
+  * a global variable "uwTick" used as application time base.
+  * @param  htim : TIM handle
+  * @retval None
+  */
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
+  /* USER CODE BEGIN Callback 0 */
+
+  /* USER CODE END Callback 0 */
+  if (htim->Instance == TIM6) {
+    HAL_IncTick();
+  }
+  /* USER CODE BEGIN Callback 1 */
+
+  /* USER CODE END Callback 1 */
 }
 
 /**
