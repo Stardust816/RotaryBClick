@@ -27,6 +27,7 @@
 #include <string.h>
 #include "myTasks.h"
 #include "usart.h"
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -214,6 +215,7 @@ int main(void)
 
   /* creation of defaultTask */
   //defaultTaskHandle = osThreadNew(StartDefaultTask, NULL, &defaultTask_attributes);
+  // StartDefaultTask(NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */
 	/* add threads, ... */

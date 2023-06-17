@@ -28,6 +28,6 @@
 void StartDefaultTask(void *argument); // Default & initial configuration task
 void UartHandlerTask(void *argument); // Task which handles the intermediate communication between UART interfaces
 void SendATCommand(char *command); // Function which transmits a provided string to UART1
-void StartTcpServer(void);
+void StartTcpServer(void *argument);
 
 #endif /* INC_MYTASKS_H_ */

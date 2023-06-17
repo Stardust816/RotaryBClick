@@ -26,12 +26,15 @@ uint8_t uart2_rx_char;
 // Task handles
 TaskHandle_t xUartTaskHandle = NULL;
 
-void StartTcpServer(void);
-
 // NOTE: COPY & PASTING INTO SERIAL TERMINAL DOES NOT WORK!
 // The serial terminal is meant for human input, since it is character by character via interrupts!
 
 void StartDefaultTask(void *argument) {
+	/* Debugging by jD */
+	strcpy((char*)uart1Buffer, "start default task!\n\r");
+	HAL_UART_Transmit(&huart2, uart1Buffer, strlen((char*)uart1Buffer), HAL_MAX_DELAY);
+	strcpy((char*)uart1Buffer, "\0");
+
 	// Create tasks
 	//xTaskCreate(uart2Task, "Uart1Task", 128, NULL, osPriorityLow, NULL);
 	xTaskCreate(UartHandlerTask, xUartHandlerTaskName, 128, NULL, osPriorityNormal1, &xUartTaskHandle);
@@ -73,7 +76,7 @@ void StartDefaultTask(void *argument) {
 
 	/* CONNECTs to YOUR-SSID with YOUR-WIFI-PWD
 	// SendATCommand("AT+CWJAP=\"YOUR-SSID\",\"YOUR-WIFI-PWD\""); */
-	StartTcpServer();
+	StartTcpServer(NULL);
 
 	HAL_UART_Receive_IT(&huart2, &uart2_rx_char, 1);
 
@@ -147,6 +150,7 @@ void UartHandlerTask(void *argument) {
 		}
 	}
 }
+
 // Interrupt callback routine for UART
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
@@ -171,11 +175,11 @@ void SendATCommand(char *command) {
 	vPortFree(buffer);
 }
 
-void StartTcpServer(void) {
-	/* Debugging by jD
+void StartTcpServer(void *argument) {
+	/* Debugging by jD */
 	strcpy((char*)uart1Buffer, "start tcp server!\n\r");
-	HAL_UART_Transmit(uart2, uart1Buffer, strlen((char*)uart1Buffer), HAL_MAX_DELAY);
-	strcpy((char*)uart1Buffer, "\0"); */
+	HAL_UART_Transmit(&huart2, uart1Buffer, strlen((char*)uart1Buffer), HAL_MAX_DELAY);
+	strcpy((char*)uart1Buffer, "\0");
 
 	// Configure Station+AP Mode
 	SendATCommand("AT+CWMODE=3");
