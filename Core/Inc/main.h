@@ -31,6 +31,14 @@ extern "C" {
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include <stdio.h>
+#include <stdbool.h>
+#include <string.h>
+
+#include "cmsis_os2.h"			// For CMSIS API functions
+#include "FreeRTOS.h"			// For FreeRTOS API functions
+#include "task.h"				// for FreeRTOS task control functions
+#include "stm32l4xx_ll_usart.h" // For lowlevel usart abstraction access
 
 /* USER CODE END Includes */
 
@@ -69,6 +77,15 @@ void Error_Handler(void);
 #define LD3_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
+
+// Increase this if your output is cutoff
+// Be aware that this will take up space in the stack, not the heap
+// This number is also the maximum number of characters which can be received in the TCP server
+#define BUFFER_SIZE 4096
+
+// Define bit masks for the two types of events
+#define UART1_IDLE_EVENT (1 << 0)
+#define UART2_EVENT (1 << 1)
 
 /* USER CODE END Private defines */
 

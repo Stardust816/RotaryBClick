@@ -22,11 +22,6 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include <stdio.h>
-#include <stdbool.h>
-#include <string.h>
-
-#include "stm32l4xx_ll_usart.h"
 
 /* USER CODE END Includes */
 
@@ -52,10 +47,6 @@ typedef struct  {
 #define LEDMIN 3
 #define LEDMAX 11
 #define LEDSTART 7
-
-#define BUFFER_SIZE 4096
-#define UART1_IDLE_EVENT (1 << 0)
-#define UART2_EVENT (1 << 1)
 
 /* USER CODE END PM */
 
@@ -145,8 +136,11 @@ static void MX_USART1_UART_Init(void);
 void StartLedTask(void *argument);
 void StartEncoderTask(void *argument);
 void StartDefaultTask(void *argument);
+void StartTcpServer(void);
 
 /* USER CODE BEGIN PFP */
+void StartTcpServer(void);
+void SendATCommand(char *command);
 
 /* USER CODE END PFP */
 
@@ -252,6 +246,7 @@ int main(void)
 
   /* creation of defaultTask */
   defaultTaskHandle = osThreadNew(StartDefaultTask, NULL, &defaultTask_attributes);
+  StartTcpServer();
 
   /* USER CODE BEGIN RTOS_THREADS */
 	/* add threads, ... */
@@ -466,6 +461,55 @@ static void MX_GPIO_Init(void)
 
 // by jD
 
+void SendATCommand(char *command) {
+	// The command sent MUST NOT contain a newline, otherwise it might be error-prone
+	uint8_t cmd_length = strlen(command); // If your string is not NULL-Terminated this will cause errors!
+	uint8_t *buffer = (uint8_t*)pvPortMalloc(sizeof(char)*cmd_length+2);
+	strncpy((char*)buffer, command, cmd_length);
+	buffer[cmd_length] = '\r';
+	buffer[cmd_length+1] = '\n';
+	HAL_UART_Transmit(&huart1, buffer, cmd_length+2, HAL_MAX_DELAY);
+	vPortFree(buffer);
+}
+
+void StartTcpServer(void) {
+	/* Debugging by jD */
+	strcpy((char*)uart1Buffer, "start tcp server!\n\r");
+	if (osSemaphoreAcquire(uartSemaHandle, 10) == osOK) {
+		HAL_UART_Transmit(&huart2, uart1Buffer, strlen((char*)uart1Buffer), HAL_MAX_DELAY);
+		osSemaphoreRelease(uartSemaHandle);
+	}
+	strcpy((char*)uart1Buffer, "\0");
+
+	// Configure Station+AP Mode
+	SendATCommand("AT+CWMODE=3");
+	osDelay(10);
+
+	// Allow multiple connections
+	SendATCommand("AT+CIPMUX=1");
+	osDelay(10);
+
+	// Start TCP server on Port 80
+	SendATCommand("AT+CIPSERVER=1,80");
+	osDelay(10);
+
+	// create Server
+	SendATCommand("AT+CWSAP=\"TheDrive\",\"1234567890\",5,3");
+	osDelay(10);
+
+	// AT+CIPSEND=0,4
+	SendATCommand("AT+CIPSTATUS");
+	osDelay(10);
+
+	// CONNECTs to YOUR-SSID with YOUR-WIFI-PWD
+	// SendATCommand("AT+CWJAP=\"YOUR-SSID\",\"YOUR-WIFI-PWD\"");
+
+	/* home
+	// SendATCommand("AT+CWJAP=\"w4t4w15z4t1R4h4z5\",\"c47np9373R\"");
+	SendATCommand("AT+CWJAP=\"Fairphone 4 5G_8331\",\"zahsakb5p26dz2p\"");
+	osDelay(10); */
+}
+
 void UartHandlerTask(void *argument) {
 	uint32_t ulNotificationValue;
 	static size_t old_pos = 0;  // Track the position of last character processed
@@ -546,6 +590,19 @@ void UartHandlerTask(void *argument) {
 				}
 			}
 		}
+	}
+}
+
+/*
+Interrupt callback routine for UART */
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
+	if(huart->Instance == USART2) {
+		BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+		xTaskNotifyFromISR(xUartTaskHandle, UART2_EVENT, eSetBits, &xHigherPriorityTaskWoken);
+		portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+
+		// Restart reception with interrupt
+		HAL_UART_Receive_IT(&huart2, &uart2_rx_char, 1);
 	}
 }
 
@@ -677,7 +734,7 @@ void StartEncoderTask(void *argument)
 * @retval None
 */
 /* USER CODE END Header_StartDefaultTask */
-__weak void StartDefaultTask(void *argument)
+void StartDefaultTask(void *argument)
 {
   /* USER CODE BEGIN StartDefaultTask */
 
@@ -695,6 +752,12 @@ __weak void StartDefaultTask(void *argument)
 	LL_USART_EnableIT_IDLE(USART1); // Enable idle line detection (interrupt) for uart1
 	// NOTE: Please check stm32l4xx_it.c for the USER-CODE that handles the IDLE Line Interrupt!!
 	HAL_UART_Receive_DMA(&huart1, uart1Buffer, BUFFER_SIZE);
+
+	StartTcpServer();
+
+	HAL_UART_Receive_IT(&huart2, &uart2_rx_char, 1);
+
+	osThreadExit();
 
 	/* Infinite loop
 	for(;;) {
