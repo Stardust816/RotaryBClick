@@ -25,6 +25,9 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <string.h>
+
+#include "stm32l4xx_ll_usart.h"
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -35,6 +38,7 @@ typedef struct  {
   bool button_pressed;
   int counter;
 } InputEvent;
+
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -47,6 +51,11 @@ typedef struct  {
 #define LEDMIN 3
 #define LEDMAX 11
 #define LEDSTART 7
+
+#define BUFFER_SIZE 4096
+#define UART1_IDLE_EVENT (1 << 0)
+#define UART2_EVENT (1 << 1)
+
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
@@ -98,6 +107,24 @@ const osMessageQueueAttr_t RotaryEncoderQueue_attributes = {
 };
 /* USER CODE BEGIN PV */
 
+// Create circular buffers
+uint8_t uart1Buffer[BUFFER_SIZE];
+uint8_t uart2Buffer[BUFFER_SIZE];
+
+// Buffer indices
+uint16_t uart1BufferIndex = 0;
+uint16_t uart2BufferIndex = 0;
+
+// temporaray data buffers
+uint8_t uart2_rx_char;
+
+// Task handles
+TaskHandle_t xUartTaskHandle = NULL;
+
+const char *xUartHandlerTaskName = "UartHandler";
+const char *newLine = "\r\n";
+
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -108,6 +135,8 @@ static void MX_USART2_UART_Init(void);
 static void MX_USART1_UART_Init(void);
 void StartLedTask(void *argument);
 void StartEncoderTask(void *argument);
+
+void UartHandlerTask(void *argument);
 void StartDefaultTask(void *argument);
 
 /* USER CODE BEGIN PFP */
@@ -424,6 +453,71 @@ static void MX_GPIO_Init(void)
 
 /* USER CODE BEGIN 4 */
 
+// by jD
+
+void UartHandlerTask(void *argument) {
+	uint32_t ulNotificationValue;
+	static size_t old_pos = 0;  // Track the position of last character processed
+
+	while(1) {
+		// Wait for a task notification indicating an uart event
+		if(xTaskNotifyWait(0x00, UINT32_MAX, &ulNotificationValue, portMAX_DELAY) == pdPASS) {
+
+			if(ulNotificationValue & UART1_IDLE_EVENT) { // Received message from UART1
+
+				size_t new_pos = BUFFER_SIZE - huart1.hdmarx->Instance->CNDTR; // huart1->hdmarx->Instance->CNDTR;  // Compute the new position in the buffer
+				size_t length;
+
+				if(new_pos != old_pos) { // Check if any new data is received
+					// The transmissions here are also in blocking mode, otherwise output is cutoff!
+					// If received data is BIGGER than buffer size, then output will be cutoff! (=> Increase buffer size)
+
+					if (new_pos > old_pos) { // If data does not wrap around the buffer
+						length = new_pos - old_pos;
+						// Process your data => uart1Buffer[old_pos] TO uart1Buffer[old_pos+length] == Received DATA
+						HAL_UART_Transmit(&huart2, &uart1Buffer[old_pos], length, HAL_MAX_DELAY);
+
+					} else { // If data wraps around the buffer
+						// If you process data in here, you'll need to partially construct your data
+
+						// First transmit the data until the end of the buffer
+						length = BUFFER_SIZE - old_pos;
+						HAL_UART_Transmit(&huart2, &uart1Buffer[old_pos], length, HAL_MAX_DELAY);
+
+						// Then transmit the remaining data from the beginning of the buffer
+						length = new_pos;
+						HAL_UART_Transmit(&huart2, uart1Buffer, length, HAL_MAX_DELAY);
+					}
+
+					old_pos = new_pos;  // Update the position of the last character processed
+				}
+			}
+
+			if (ulNotificationValue & UART2_EVENT) { // Received CHARACTER from UART2
+				char c = (char)uart2_rx_char;
+
+				// Echo back the character to the terminal
+				HAL_UART_Transmit_IT(&huart2, (uint8_t*)&c, 1);
+
+				// If newline, forward the buffer to UART1 and reset buffer
+				if(c == '\r') {
+					uart2Buffer[uart2BufferIndex++] = '\r';
+					uart2Buffer[uart2BufferIndex++] = '\n';
+					HAL_UART_Transmit_IT(&huart2, (uint8_t*)newLine, 2);
+					// This call will be made in blocking mode, because we'll clear the buffer!
+					HAL_UART_Transmit(&huart1, uart2Buffer, uart2BufferIndex, HAL_MAX_DELAY);
+					memset(uart2Buffer, 0, BUFFER_SIZE);
+					uart2BufferIndex = 0;
+
+				} else {
+					// Add character to buffer
+					uart2Buffer[uart2BufferIndex++] = c;
+				}
+			}
+		}
+	}
+}
+
 /* USER CODE END 4 */
 
 /* USER CODE BEGIN Header_StartLedTask */
@@ -549,14 +643,26 @@ void StartEncoderTask(void *argument)
 * @retval None
 */
 /* USER CODE END Header_StartDefaultTask */
-__weak void StartDefaultTask(void *argument)
+void StartDefaultTask(void *argument)
 {
+	/* Debugging by jD */
+
+	strcpy((char*)uart1Buffer, "start broadcaster!\n\r");
+	HAL_UART_Transmit(&huart2, uart1Buffer, strlen((char*)uart1Buffer), HAL_MAX_DELAY);
+	strcpy((char*)uart1Buffer, "\0");
+
+	xTaskCreate(UartHandlerTask, xUartHandlerTaskName, 128, NULL, osPriorityNormal1, &xUartTaskHandle);
+
+	// Activate UART interrupts and reception
+	LL_USART_EnableIT_IDLE(USART1); // Enable idle line detection (interrupt) for uart1
+	// NOTE: Please check stm32l4xx_it.c for the USER-CODE that handles the IDLE Line Interrupt!!
+	HAL_UART_Receive_DMA(&huart1, uart1Buffer, BUFFER_SIZE);
+
   /* USER CODE BEGIN StartDefaultTask */
-  /* Infinite loop */
-  for(;;)
-  {
-    osDelay(1);
-  }
+	/* Infinite loop
+	for(;;) {
+		osDelay(1);
+	} */
   /* USER CODE END StartDefaultTask */
 }
 
