@@ -190,16 +190,29 @@ void USART1_IRQHandler(void)
   HAL_UART_IRQHandler(&huart1);
   /* USER CODE BEGIN USART1_IRQn 1 */
 
-  	  if(LL_USART_IsEnabledIT_IDLE(USART1) && LL_USART_IsActiveFlag_IDLE(USART1)) {
+  if(LL_USART_IsEnabledIT_IDLE(USART1) && LL_USART_IsActiveFlag_IDLE(USART1)) {
 
-		  LL_USART_ClearFlag_IDLE(USART1);        /* Clear IDLE line flag */
-		  // Give a task notification to the UART2 Task
-		  BaseType_t xHigherPriorityTaskWoken = pdFALSE;
-		  xTaskNotifyFromISR(xUartTaskHandle, UART1_IDLE_EVENT, eSetBits, &xHigherPriorityTaskWoken);
-		  portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
-  	  }
+	  LL_USART_ClearFlag_IDLE(USART1);        /* Clear IDLE line flag */
+	  // Give a task notification to the UART2 Task
+	  BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+	  xTaskNotifyFromISR(xUartTaskHandle, UART1_IDLE_EVENT, eSetBits, &xHigherPriorityTaskWoken);
+	  portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+  }
 
   /* USER CODE END USART1_IRQn 1 */
+}
+
+/**
+  * @brief This function handles USART2 global interrupt.
+  */
+void USART2_IRQHandler(void)
+{
+  /* USER CODE BEGIN USART2_IRQn 0 */
+
+  /* USER CODE END USART2_IRQn 0 */
+  HAL_UART_IRQHandler(&huart2);
+  /* USER CODE BEGIN USART2_IRQn 1 */
+  /* USER CODE END USART2_IRQn 1 */
 }
 
 /**

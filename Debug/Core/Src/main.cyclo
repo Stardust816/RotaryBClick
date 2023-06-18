@@ -7,11 +7,11 @@ main.c:371:13:MX_USART2_UART_Init	2
 main.c:404:13:MX_DMA_Init	1
 main.c:422:13:MX_GPIO_Init	1
 main.c:461:6:SendATCommand	1
-main.c:472:6:StartTcpServer	1
-main.c:511:6:UartHandlerTask	7
+main.c:472:6:StartTcpServer	2
+main.c:511:6:UartHandlerTask	12
 main.c:601:6:HAL_UART_RxCpltCallback	3
 main.c:621:6:StartLedTask	3
-main.c:663:6:StartEncoderTask	10
-main.c:741:6:StartDefaultTask	0
+main.c:663:6:StartEncoderTask	11
+main.c:741:6:StartDefaultTask	1
 main.c:783:6:HAL_TIM_PeriodElapsedCallback	2
 main.c:800:6:Error_Handler	1

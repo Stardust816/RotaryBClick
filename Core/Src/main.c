@@ -473,10 +473,10 @@ void StartTcpServer(void) {
 	/* Debugging by jD */
 	strcpy((char*)uart1Buffer, "start tcp server!\n\r");
 	// semaComment
-	// if (osSemaphoreAcquire(uartSemaHandle, 10) == osOK) {
+	if (osSemaphoreAcquire(uartSemaHandle, 10) == osOK) {
 		HAL_UART_Transmit(&huart2, uart1Buffer, strlen((char*)uart1Buffer), HAL_MAX_DELAY);
-		// osSemaphoreRelease(uartSemaHandle);
-	// }
+		osSemaphoreRelease(uartSemaHandle);
+	}
 	strcpy((char*)uart1Buffer, "\0");
 
 	// Configure Station+AP Mode
@@ -530,10 +530,10 @@ void UartHandlerTask(void *argument) {
 						// Process your data => uart1Buffer[old_pos] TO uart1Buffer[old_pos+length] == Received DATA
 
 						// semaComment
-						// if (osSemaphoreAcquire(uartSemaHandle, 10) == osOK) {
+						if (osSemaphoreAcquire(uartSemaHandle, 10) == osOK) {
 							HAL_UART_Transmit(&huart2, &uart1Buffer[old_pos], length, HAL_MAX_DELAY);
-							// osSemaphoreRelease(uartSemaHandle);
-						// }
+							osSemaphoreRelease(uartSemaHandle);
+						}
 
 					} else { // If data wraps around the buffer
 						// If you process data in here, you'll need to partially construct your data
@@ -542,19 +542,19 @@ void UartHandlerTask(void *argument) {
 						length = BUFFER_SIZE - old_pos;
 
 						// semaComment
-						// if (osSemaphoreAcquire(uartSemaHandle, 10) == osOK) {
+						if (osSemaphoreAcquire(uartSemaHandle, 10) == osOK) {
 							HAL_UART_Transmit(&huart2, &uart1Buffer[old_pos], length, HAL_MAX_DELAY);
-							// osSemaphoreRelease(uartSemaHandle);
-						// }
+							osSemaphoreRelease(uartSemaHandle);
+						}
 
 						// Then transmit the remaining data from the beginning of the buffer
 						length = new_pos;
 
 						// semaComment
-						// if (osSemaphoreAcquire(uartSemaHandle, 10) == osOK) {
+						if (osSemaphoreAcquire(uartSemaHandle, 10) == osOK) {
 							HAL_UART_Transmit(&huart2, uart1Buffer, length, HAL_MAX_DELAY);
-							// osSemaphoreRelease(uartSemaHandle);
-						// }
+							osSemaphoreRelease(uartSemaHandle);
+						}
 					}
 
 					old_pos = new_pos;  // Update the position of the last character processed
@@ -566,10 +566,10 @@ void UartHandlerTask(void *argument) {
 
 				// Echo back the character to the terminal
 				// semaComment
-				// if (osSemaphoreAcquire(uartSemaHandle, 10) == osOK) {
+				if (osSemaphoreAcquire(uartSemaHandle, 10) == osOK) {
 					HAL_UART_Transmit_IT(&huart2, (uint8_t*)&c, 1);
-					// osSemaphoreRelease(uartSemaHandle);
-				// }
+					osSemaphoreRelease(uartSemaHandle);
+				}
 
 				// If newline, forward the buffer to UART1 and reset buffer
 				if(c == '\r') {
@@ -577,15 +577,17 @@ void UartHandlerTask(void *argument) {
 					uart2Buffer[uart2BufferIndex++] = '\n';
 
 					// semaComment
-					// if (osSemaphoreAcquire(uartSemaHandle, 10) == osOK) {
+					if (osSemaphoreAcquire(uartSemaHandle, 10) == osOK) {
 						HAL_UART_Transmit_IT(&huart2, (uint8_t*)newLine, 2);
-						// osSemaphoreRelease(uartSemaHandle);
-					// }
+						osSemaphoreRelease(uartSemaHandle);
+					}
 
 					// This call will be made in blocking mode, because we'll clear the buffer!
 					HAL_UART_Transmit(&huart1, uart2Buffer, uart2BufferIndex, HAL_MAX_DELAY);
 					memset(uart2Buffer, 0, BUFFER_SIZE);
 					uart2BufferIndex = 0;
+
+					// Hier kommt Code rein
 
 				} else {
 					// Add character to buffer
@@ -703,10 +705,10 @@ void StartEncoderTask(void *argument)
 			snprintf(msg1, sizeof(msg1), "%d\r\n", event.counter);
 
 			// semaComment
-			// if (osSemaphoreAcquire(uartSemaHandle, 10) == osOK) {
+			if (osSemaphoreAcquire(uartSemaHandle, 10) == osOK) {
 				HAL_UART_Transmit(&huart2, (uint8_t*) msg1, strlen(msg1), 1000);
-				// osSemaphoreRelease(uartSemaHandle);
-			// }
+				osSemaphoreRelease(uartSemaHandle);
+			}
 
 			//uint32_t leds = 0xFFFF0000;
 
@@ -746,10 +748,10 @@ void StartDefaultTask(void *argument)
 	strcpy((char*)uart1Buffer, "start broadcaster!\n\r");
 
 	// semaComment
-	// if (osSemaphoreAcquire(uartSemaHandle, 10) == osOK) {
+	if (osSemaphoreAcquire(uartSemaHandle, 10) == osOK) {
 		HAL_UART_Transmit(&huart2, uart1Buffer, strlen((char*)uart1Buffer), HAL_MAX_DELAY);
-		// osSemaphoreRelease(uartSemaHandle);
-	// }
+		osSemaphoreRelease(uartSemaHandle);
+	}
 	strcpy((char*)uart1Buffer, "\0");
 
 	xTaskCreate(UartHandlerTask, xUartHandlerTaskName, 128, NULL, osPriorityNormal1, &xUartTaskHandle);
