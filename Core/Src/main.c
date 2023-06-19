@@ -29,6 +29,7 @@
 typedef StaticTask_t osStaticThreadDef_t;
 typedef StaticQueue_t osStaticMessageQDef_t;
 typedef StaticSemaphore_t osStaticSemaphoreDef_t;
+
 /* USER CODE BEGIN PTD */
 typedef struct  {
   bool button_pressed;
@@ -49,11 +50,11 @@ typedef struct  {
 #define LEDSTART 7
 
 /* USER CODE END PM */
-
-/* Private variables ---------------------------------------------------------*/
 UART_HandleTypeDef huart1;
 UART_HandleTypeDef huart2;
 DMA_HandleTypeDef hdma_usart1_rx;
+
+/* Private variables ---------------------------------------------------------*/
 
 /* Definitions for LedTask */
 osThreadId_t LedTaskHandle;
@@ -104,6 +105,14 @@ const osSemaphoreAttr_t uartSema_attributes = {
   .name = "uartSema",
   .cb_mem = &uartSemaControlBlock,
   .cb_size = sizeof(uartSemaControlBlock),
+};
+/* Definitions for counterSema2 */
+osSemaphoreId_t counterSema2Handle;
+osStaticSemaphoreDef_t counterSema2ControlBlock;
+const osSemaphoreAttr_t counterSema2_attributes = {
+  .name = "counterSema2",
+  .cb_mem = &counterSema2ControlBlock,
+  .cb_size = sizeof(counterSema2ControlBlock),
 };
 /* USER CODE BEGIN PV */
 
@@ -220,6 +229,9 @@ int main(void)
   /* creation of uartSema */
   uartSemaHandle = osSemaphoreNew(1, 1, &uartSema_attributes);
 
+  /* creation of counterSema2 */
+  counterSema2Handle = osSemaphoreNew(1, 1, &counterSema2_attributes);
+
   /* USER CODE BEGIN RTOS_SEMAPHORES */
 	/* add semaphores, ... */
   /* USER CODE END RTOS_SEMAPHORES */
@@ -245,7 +257,6 @@ int main(void)
 
   /* creation of defaultTask */
   defaultTaskHandle = osThreadNew(StartDefaultTask, NULL, &defaultTask_attributes);
-  // StartTcpServer();
 
   /* USER CODE BEGIN RTOS_THREADS */
 	/* add threads, ... */
@@ -706,7 +717,7 @@ void StartEncoderTask(void *argument)
 				osSemaphoreRelease(uartSemaHandle);
 
 				SendATCommand("AT+CIPSEND=1");
-				osDelay(100);
+				osDelay(500);
 
 				SendATCommand(msg1);
 				osDelay(100);
