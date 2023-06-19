@@ -245,7 +245,7 @@ int main(void)
 
   /* creation of defaultTask */
   defaultTaskHandle = osThreadNew(StartDefaultTask, NULL, &defaultTask_attributes);
-  StartTcpServer();
+  // StartTcpServer();
 
   /* USER CODE BEGIN RTOS_THREADS */
 	/* add threads, ... */
@@ -471,7 +471,7 @@ void SendATCommand(char *command) {
 
 void StartTcpServer(void) {
 	/* Debugging by jD */
-	strcpy((char*)uart1Buffer, "start tcp server!\n\r");
+	strcpy((char*)uart1Buffer, "connecnt to tcp server!\n\r");
 	// semaComment
 	if (osSemaphoreAcquire(uartSemaHandle, 10) == osOK) {
 		HAL_UART_Transmit(&huart2, uart1Buffer, strlen((char*)uart1Buffer), HAL_MAX_DELAY);
@@ -480,32 +480,29 @@ void StartTcpServer(void) {
 	strcpy((char*)uart1Buffer, "\0");
 
 	// Configure Station+AP Mode
-	SendATCommand("AT+CWMODE=3");
-	osDelay(10);
+	SendATCommand("AT+CWMODE=1");
+	osDelay(2000);
 
-	// Allow multiple connections
-	SendATCommand("AT+CIPMUX=1");
-	osDelay(10);
+	SendATCommand("AT+CIPSTA=\"192.168.5.10\"");
+	osDelay(1000);
 
-	// Start TCP server on Port 80
-	SendATCommand("AT+CIPSERVER=1,80");
-	osDelay(10);
+	// connect to tcp server
+	SendATCommand("AT+CWJAP=\"TheDrive\",\"1234567890\"");
+	osDelay(3000);
 
-	// create Server
-	SendATCommand("AT+CWSAP=\"TheDrive\",\"1234567890\",5,3");
-	osDelay(10);
+	SendATCommand("AT+CIPSTART=\"TCP\",\"192.168.5.5\",80");
+	osDelay(1000);
+
+	// Gets the Local IP Address
+	SendATCommand("AT+CIFSR");
+	osDelay(1000);
 
 	// AT+CIPSEND=0,4
-	SendATCommand("AT+CIPSTATUS");
-	osDelay(10);
+	SendATCommand("AT+CIPSEND=4");
+	osDelay(1000);
 
-	// CONNECTs to YOUR-SSID with YOUR-WIFI-PWD
-	// SendATCommand("AT+CWJAP=\"YOUR-SSID\",\"YOUR-WIFI-PWD\"");
-
-	/* home
-	// SendATCommand("AT+CWJAP=\"w4t4w15z4t1R4h4z5\",\"c47np9373R\"");
-	SendATCommand("AT+CWJAP=\"Fairphone 4 5G_8331\",\"zahsakb5p26dz2p\"");
-	osDelay(10); */
+	SendATCommand("test");
+	osDelay(1000);
 }
 
 void UartHandlerTask(void *argument) {
@@ -689,7 +686,6 @@ void StartEncoderTask(void *argument)
 			} else if (LEDMIN != event.counter) {
 				//if(counter != 3)
 				event.counter--;
-
 			}
 		}
 
@@ -708,6 +704,12 @@ void StartEncoderTask(void *argument)
 			if (osSemaphoreAcquire(uartSemaHandle, 10) == osOK) {
 				HAL_UART_Transmit(&huart2, (uint8_t*) msg1, strlen(msg1), 1000);
 				osSemaphoreRelease(uartSemaHandle);
+
+				SendATCommand("AT+CIPSEND=1");
+				osDelay(100);
+
+				SendATCommand(msg1);
+				osDelay(100);
 			}
 
 			//uint32_t leds = 0xFFFF0000;
