@@ -8,10 +8,10 @@
 ../Core/Src/main.c:433:13:MX_GPIO_Init	40	static
 ../Core/Src/main.c:472:6:SendATCommand	24	static
 ../Core/Src/main.c:483:6:StartTcpServer	16	static
-../Core/Src/main.c:519:6:UartHandlerTask	32	static
-../Core/Src/main.c:611:6:HAL_UART_RxCpltCallback	32	static,ignoring_inline_asm
-../Core/Src/main.c:631:6:StartLedTask	32	static
-../Core/Src/main.c:673:6:StartEncoderTask	64	static
-../Core/Src/main.c:756:6:StartDefaultTask	32	static
-../Core/Src/main.c:798:6:HAL_TIM_PeriodElapsedCallback	16	static
-../Core/Src/main.c:815:6:Error_Handler	4	static,ignoring_inline_asm
+../Core/Src/main.c:512:6:UartHandlerTask	32	static
+../Core/Src/main.c:604:6:HAL_UART_RxCpltCallback	32	static,ignoring_inline_asm
+../Core/Src/main.c:624:6:StartLedTask	32	static
+../Core/Src/main.c:666:6:StartEncoderTask	64	static
+../Core/Src/main.c:749:6:StartDefaultTask	32	static
+../Core/Src/main.c:791:6:HAL_TIM_PeriodElapsedCallback	16	static
+../Core/Src/main.c:808:6:Error_Handler	4	static,ignoring_inline_asm

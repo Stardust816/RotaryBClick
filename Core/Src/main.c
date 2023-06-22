@@ -507,13 +507,6 @@ void StartTcpServer(void) {
 	// Gets the Local IP Address
 	SendATCommand("AT+CIFSR");
 	osDelay(1000);
-
-	// AT+CIPSEND=0,4
-	SendATCommand("AT+CIPSEND=4");
-	osDelay(1000);
-
-	SendATCommand("test");
-	osDelay(1000);
 }
 
 void UartHandlerTask(void *argument) {
@@ -709,7 +702,7 @@ void StartEncoderTask(void *argument)
 		if (memcmp(&oldevent, &event, sizeof(event))) {
 
 			char msg1[16];
-			snprintf(msg1, sizeof(msg1), "%d\r\n", event.counter);
+			snprintf(msg1, sizeof(msg1), "%d\r\n", event.counter -3);
 
 			// semaComment
 			if (osSemaphoreAcquire(uartSemaHandle, 10) == osOK) {
@@ -717,7 +710,7 @@ void StartEncoderTask(void *argument)
 				osSemaphoreRelease(uartSemaHandle);
 
 				SendATCommand("AT+CIPSEND=1");
-				osDelay(500);
+				osDelay(100);
 
 				SendATCommand(msg1);
 				osDelay(100);
