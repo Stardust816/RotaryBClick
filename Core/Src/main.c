@@ -154,6 +154,10 @@ void SendATCommand(char *command);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+
+/**Function for turning LED's on
+ *
+ */
 void setleds(uint16_t ledring) {
 
 	for (int i = 0; i < 16; i++) {
@@ -613,6 +617,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 /* USER CODE BEGIN Header_StartLedTask */
 /**
  * @brief  Function implementing the LedTask thread.
+ * 		   Setting LED's if button was pressed (was meant for pause pattern)
  * @param  argument: Not used
  * @retval None
  */
@@ -653,6 +658,8 @@ void StartLedTask(void *argument)
 /* USER CODE BEGIN Header_StartEncoderTask */
 /**
  * @brief Function implementing the EncoderTask thread.
+ * 		  Checking for Change of the Encoder to only highlight the LED showing the position of the encoder in
+ * 		  game.
  * @param argument: Not used
  * @retval None
  */
