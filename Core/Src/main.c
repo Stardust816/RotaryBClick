@@ -156,8 +156,6 @@ void SendATCommand(char *command);
 /* USER CODE BEGIN 0 */
 void setleds(uint16_t ledring) {
 
-	//uint16_t ledring = 0b1010101010101010;
-
 	for (int i = 0; i < 16; i++) {
 
 		if (ledring & (1 << i)) {
@@ -171,8 +169,6 @@ void setleds(uint16_t ledring) {
 		HAL_GPIO_WritePin(GPIOB, GPIO_PIN_3, GPIO_PIN_SET);
 
 		HAL_GPIO_WritePin(GPIOB, GPIO_PIN_3, GPIO_PIN_RESET);
-
-		//HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_3);
 
 	}
 
@@ -624,15 +620,11 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 void StartLedTask(void *argument)
 {
   /* USER CODE BEGIN 5 */
-	//uint16_t value = 0;
 	InputEvent event;
 	/* Infinite loop */
 	for (;;) {
-		/*setleds(0b1010101010101010);
-		 osDelay(1000);
-		 setleds(0b0101010101010101);
-		 osDelay(1000);*/
 
+		//read item from queue
 		osStatus_t ret = osMessageQueueGet(RotaryEncoderQueueHandle, &event, 0,
 				10);
 		if (ret != osOK) {
@@ -643,11 +635,13 @@ void StartLedTask(void *argument)
 
 			uint32_t value;
 
-			if (event.button_pressed) { //If 6th bit set, button was pressed -> pause game -> display on leds
+			//button press -> led values
+			if (event.button_pressed) {
 				value = 0b1010101010101010;
 			} else {
 				value = 1 << event.counter;
 			}
+			//display on leds
 			setleds(value);
 		}
 
@@ -667,7 +661,6 @@ void StartEncoderTask(void *argument)
 {
   /* USER CODE BEGIN StartEncoderTask */
 	uint16_t counter = 8;
-	//uint16_t old_counter = 0;
 	uint8_t old_state_a = 0;
 	uint8_t old_state_button = 0;
 	InputEvent event;
@@ -677,10 +670,12 @@ void StartEncoderTask(void *argument)
 	/* Infinite loop */
 	for (;;) {
 
+		//Input states
 		uint8_t a = HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0);
 		uint8_t b = HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_1);
 		uint8_t button = HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_3);
 
+		//Encoder rotation
 		if (a != old_state_a && event.counter <= 16) {
 
 			if (a != b) {
@@ -688,17 +683,17 @@ void StartEncoderTask(void *argument)
 					event.counter++;
 
 			} else if (LEDMIN != event.counter) {
-				//if(counter != 3)
 				event.counter--;
 			}
 		}
 
+		//Button press
 		if (old_state_button != button && button) {
-			event.button_pressed = !event.button_pressed; //Bit toggle -> XOR -> toggle 6th bit
+			event.button_pressed = !event.button_pressed;
 			event.counter = LEDSTART;
-			//setleds(0b1010101010101010);
 		}
 
+		//Check if event has changed
 		if (memcmp(&oldevent, &event, sizeof(event))) {
 
 			char msg1[16];
@@ -716,10 +711,6 @@ void StartEncoderTask(void *argument)
 				osDelay(100);
 			}
 
-			//uint32_t leds = 0xFFFF0000;
-
-			//leds = leds >> counter;
-			//event.counter = counter;
 			osStatus_t ret = osMessageQueuePut(RotaryEncoderQueueHandle,
 					&event, 0, 10);
 
@@ -730,9 +721,10 @@ void StartEncoderTask(void *argument)
 				printf("\r\nenqueued item %u", counter);
 			}
 		}
+
+		//Update the states
 		old_state_a = a;
 		old_state_button = button;
-		//old_counter = counter;
 		memcpy(&oldevent, &event, sizeof(event));
 		osDelay(1);
 	}
